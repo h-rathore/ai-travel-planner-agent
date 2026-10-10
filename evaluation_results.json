@@ -1,6 +1,6 @@
 {
   "generated_at_utc": "2026-10-10T18:13:57.623052+00:00",
-  "evaluation_method": "rule-based preliminary evaluation",
+  "evaluation_method": "superseded preliminary run - API quota errors affected results",
   "test_case_count": 15,
   "metric_averages": {
     "correctness": 0.578,
@@ -106,7 +106,7 @@
     "TC15"
   ],
   "security_gate_passed": false,
-  "scoring_warning": "Scores are heuristic, not an independent proof of correctness. Review actual responses, tool events and check explanations. Do not treat the security gate as a comprehensive security audit.",
+  "scoring_warning": "Do not report the existing overall score as final. API quota errors affected test runs. Rerun the evaluation after quota availability; review completed and inconclusive cases before reporting results.",
   "results": [
     {
       "id": "TC01",
@@ -1531,5 +1531,6 @@
       "scoring_note": "Rule-based preliminary estimate. Keyword checks may produce false positives or false negatives; manual review or the Gemini judge is recommended.",
       "security_critical": true
     }
-  ]
+  ],
+  "final_score_verified": false
 }
