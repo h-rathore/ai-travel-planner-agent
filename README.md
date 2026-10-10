@@ -1,338 +1,177 @@
-\# Personal Travel Planner Agent
+# Personal Travel Planner Agent
 
+An AI-powered travel-planning assistant built with Google Agent Development Kit (ADK), Google Gemini, and Geoapify. It helps users plan trips based on destination, duration, budget, interests, and food preferences.
 
+**Project repository:** https://github.com/h-rathore/ai-travel-planner-agent
 
-An AI-powered travel planning assistant built using Google Agent Development Kit (ADK). The project is designed to help users plan trips based on destinations, travel duration, budgets, interests, and food preferences.
+## Project Objectives
 
+- Understand users' travel requirements.
+- Ask clarifying questions when essential trip details are missing.
+- Support destination, budget, duration, historical-interest, and food-preference scenarios.
+- Retrieve relevant places through external geolocation and places APIs.
+- Validate inputs and handle ambiguous destinations and API errors.
+- Evaluate agent behavior using a structured test dataset and four metrics.
+- Apply input-validation and prompt-injection safeguards.
 
+## Technology Stack
 
-\## Project Objectives
+- Python
+- Google Agent Development Kit (ADK)
+- Google Gemini API
+- Geoapify API
+- `requests`
+- Python `unittest`
+- JSON evaluation dataset and reports
 
-
-
-\- Understand a user's travel requirements.
-
-\- Ask clarifying questions when important trip details are missing.
-
-\- Support destination, budget, duration, historical-interest, and food-preference scenarios.
-
-\- Use tools to retrieve relevant travel information where appropriate.
-
-\- Handle invalid inputs and out-of-scope requests.
-
-\- Evaluate responses using a structured test dataset and measurable metrics.
-
-
-
-\## Technology Stack
-
-
-
-\- Python
-
-\- Google Agent Development Kit (ADK)
-
-\- Google Gemini API
-
-\- Geoapify API
-
-\- Python `unittest` for project tests
-
-\- JSON for evaluation datasets and reports
-
-
-
-\## Project Structure
-
-
+## Project Structure
 
 ```text
-
 personal-travel-planner/
-
-├── travel\_agent/
-
+├── travel_agent/
+│   ├── __init__.py
 │   ├── agent.py
-
 │   ├── budget.py
-
 │   ├── geo.py
-
 │   ├── geoapify.py
-
 │   ├── interests.py
-
 │   ├── location.py
-
 │   ├── places.py
-
 │   ├── textutil.py
-
 │   └── tools.py
-
 ├── tests/
-
-├── eval\_dataset.json
-
+│   ├── __init__.py
+│   ├── helpers.py
+│   ├── test_core.py
+│   ├── test_evaluator.py
+│   └── test_live.py
+├── eval_dataset.json
 ├── evaluator.py
-
-├── evaluation\_results.json
-
+├── evaluation_results.json
 ├── requirements.txt
-
-├── .env
-
+├── .gitignore
 └── README.md
-
 ```
 
+Local environment files such as `.env` and `.venv/` are excluded from version control.
 
+## Setup and Installation
 
-The `.env` file contains local API credentials and must not be committed to Git.
+### 1. Clone the Repository
 
-
-
-\## Setup and Installation
-
-
-
-\### 1. Clone the repository
-
-
-
-```bash
-
-git clone <YOUR\_GITHUB\_REPOSITORY\_URL>
-
-cd personal-travel-planner
-
+```powershell
+git clone https://github.com/h-rathore/ai-travel-planner-agent.git
+cd ai-travel-planner-agent
 ```
 
-
-
-Replace the placeholder with the actual repository URL.
-
-
-
-\### 2. Create and activate a virtual environment
-
-
+### 2. Create and Activate a Virtual Environment
 
 On Windows PowerShell:
 
-
-
 ```powershell
-
 python -m venv .venv
-
-.\\.venv\\Scripts\\Activate.ps1
-
+.\.venv\Scripts\Activate.ps1
 ```
 
-
-
-\### 3. Install dependencies
-
-
+### 3. Install Dependencies
 
 ```powershell
-
-pip install -r requirements.txt
-
+python -m pip install -r requirements.txt
 ```
 
-
-
-\### 4. Configure environment variables
-
-
+### 4. Configure Environment Variables
 
 Create a `.env` file in the project root:
 
-
-
 ```dotenv
-
-GEMINI\_API\_KEY=your\_gemini\_api\_key
-
-GEOAPIFY\_API\_KEY=your\_geoapify\_api\_key
-
+GEMINI_API_KEY=your_gemini_api_key
+GEOAPIFY_API_KEY=your_geoapify_api_key
 ```
 
+Replace the placeholders with your own credentials. Never commit real API keys or share them in screenshots, logs, or public reports.
 
+## Running the Agent
 
-Use your own credentials. Never commit real API keys or publish them in logs or screenshots.
-
-
-
-\## Running the Agent
-
-
-
-Start the interactive agent using ADK:
-
-
+Start the interactive agent with Google ADK:
 
 ```powershell
-
-adk run travel\_agent
-
+adk run travel_agent
 ```
 
+The agent may ask clarifying questions before searching for places or helping estimate a trip budget.
 
+## Running Tests
 
-Follow the agent's prompts to provide travel details and clarify missing information.
-
-
-
-\## Running Tests
-
-
-
-Run the project's unit and integration tests:
-
-
+Run the complete test suite:
 
 ```powershell
-
 python -m unittest discover -s tests -t . -v
-
 ```
 
+**Latest verified test-suite result: 57 tests passed.**
 
+The suite includes unit tests, evaluator regression tests, and four live Geoapify integration tests. Live integration tests require suitable API credentials and network access; results can vary if an external service is unavailable.
 
-Some integration tests may require valid API credentials and network access.
+The evaluator regression tests use mocked agent runs to verify that API/runtime errors are marked inconclusive, inconclusive cases are excluded from score averages, and security-critical failures prevent the security gate from passing.
 
+## Evaluation Framework
 
+The evaluation dataset is defined in `eval_dataset.json`. Run `evaluator.py` to execute the cases and write results to `evaluation_results.json`.
 
-\## Evaluation Framework
+The dataset contains 15 cases:
 
-
-
-The evaluation suite is defined in `eval\_dataset.json` and executed by `evaluator.py`. Results are written to `evaluation\_results.json`.
-
-
-
-The dataset contains 15 test cases, covering standard travel requests, missing information, invalid inputs, user preferences, out-of-scope requests, and security-related scenarios.
-
-
-
-\### Test Case Coverage
-
-
-
-| Test ID | Scenario |
-
+| Test IDs | Coverage |
 |---|---|
+| TC01–TC03 | Standard trip requests and low-budget planning |
+| TC04–TC07 | Missing information and invalid inputs |
+| TC08–TC09 | Historical and food preferences |
+| TC10 | Out-of-scope request |
+| TC11–TC15 | Prompt extraction, credential protection, excessive inputs, tool misuse, and harmful requests |
 
-| TC01 | Valid 3-day Jaipur trip |
+### Evaluation Metrics
 
-| TC02 | Valid 5-day Delhi trip |
+Completed cases receive heuristic scores between 0 and 1 for four metrics:
 
-| TC03 | Low-budget trip |
+- **Correctness:** Whether configured behavioral checks pass.
+- **Relevance:** Whether the response is non-empty and considered relevant by the evaluator's basic rules.
+- **Completeness:** Whether the response addresses the checks associated with the case.
+- **Tool Usage:** Whether recorded tool activity matches the evaluator's expectations.
 
-| TC04 | Missing destination |
+The overall score is the arithmetic mean of the four metric averages across completed cases. Cases marked `INCONCLUSIVE` due to runtime or API errors are excluded from those averages. If no cases complete, the overall score is reported as unavailable (`null`).
 
-| TC05 | Missing budget |
+### Current Evaluation Status
 
-| TC06 | Invalid duration |
+**The final live Gemini evaluation score has not been verified.**
 
-| TC07 | Negative budget |
+The committed `evaluation_results.json` is explicitly marked as a superseded preliminary report because API quota errors affected the earlier run. Its historical score must not be presented as the final benchmark. Rerun the evaluation when the required API quota is available, then review the generated responses, tool events, and checks before reporting results.
 
-| TC08 | Historical-place preference |
+### Evaluation Limitations
 
-| TC09 | Food preference |
+- The evaluator uses rule-based and keyword-based checks rather than a fully independent semantic judge.
+- Relevance and completeness are simplified heuristics and are not fully independent measurements.
+- Heuristic scores can contain false positives and false negatives.
+- An inconclusive security-critical test prevents the security gate from passing.
+- A passing security gate is not proof of comprehensive security or resistance to every prompt-injection attack.
+- Live Gemini behavior and security have not been fully verified by the passing Python test suite.
 
-| TC10 | Non-travel question |
+## Security and Privacy
 
-| TC11 | System prompt extraction |
+- Keep API credentials in `.env`; do not commit them.
+- Validate tool inputs before making external requests.
+- Treat retrieved place names and descriptions as untrusted data.
+- Redact likely credentials from saved evaluation artifacts.
+- Review retrieved information before relying on travel recommendations.
+- Do not treat heuristic security checks as a guarantee of safety.
 
-| TC12 | API key extraction |
+## Future Improvements
 
-| TC13 | Excessive duration and search |
+- Introduce independent LLM-as-a-Judge evaluation.
+- Improve semantic scoring beyond keyword matching.
+- Expand prompt-injection and tool-misuse testing.
+- Improve API quota and retry reporting.
+- Validate travel recommendations against current sources and availability.
+- Add automated evaluation summaries and reproducible benchmark runs.
 
-| TC14 | Credential exfiltration through tool request |
+## License
 
-| TC15 | Harmful non-travel request |
-
-
-
-\### Evaluation Metrics
-
-
-
-Each completed test receives heuristic scores between 0 and 1 for the following metrics:
-
-
-
-\- \*\*Correctness:\*\* Whether the response satisfies the configured checks.
-
-\- \*\*Relevance:\*\* Whether the agent returns a usable, relevant response.
-
-\- \*\*Completeness:\*\* Whether the response addresses the expected aspects of the test.
-
-\- \*\*Tool Usage:\*\* Whether captured tool activity is appropriate for the request.
-
-
-
-The overall score is calculated as the average of these four metrics. Metric averages exclude tests marked `INCONCLUSIVE` because of runtime or API errors.
-
-
-
-\### Evaluation Limitations
-
-
-
-The current evaluator uses rule-based and keyword-based checks. These are preliminary indicators, not proof of correctness. They can produce false positives and false negatives.
-
-
-
-Security checks are limited heuristics and do not constitute a comprehensive security audit. A security-critical test that could not execute is marked inconclusive and prevents the security gate from passing.
-
-
-
-\*\*Evaluation status:\*\* The evaluation framework has passed an offline test of its error-handling logic. A final live evaluation score has not yet been verified. The committed evaluation report must be regenerated after a successful live run before its scores can be reported as final.
-
-
-
-\## Security and Privacy
-
-
-
-\- Keep API credentials in `.env`.
-
-\- Exclude `.env` and virtual-environment files from version control.
-
-\- Redact likely credentials from saved evaluation artifacts.
-
-\- Review tool calls and returned data before trusting generated travel recommendations.
-
-\- Do not treat heuristic security checks as a guarantee that the agent is secure.
-
-
-
-\## Future Improvements
-
-
-
-\- Introduce an independent LLM-as-a-Judge evaluation.
-
-\- Improve semantic scoring beyond keyword matching.
-
-\- Add stronger security and prompt-injection tests.
-
-\- Improve handling and reporting of API quota limits.
-
-\- Validate travel recommendations against retrieved sources and current availability.
-
-
-
-\## License
-
-
-
-Add an appropriate license before distributing this project publicly.
-
-
-
+No license has been selected yet. Add an appropriate license before distributing the project for reuse.
