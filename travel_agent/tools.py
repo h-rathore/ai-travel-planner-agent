@@ -1,11 +1,29 @@
-"""Tool functions exposed to the ADK agent (no ADK imports, so testable)."""
+
+"""Validated tool functions exposed to the ADK agent."""
 
 import os
+import re
 from typing import Optional
 
 from .budget import estimate_budget as _estimate_budget
 from .geoapify import GeoapifyClient
 from .places import DEFAULT_RADIUS_M, run_place_search
+
+
+MAX_DESTINATION_LENGTH = 200
+MAX_INTERESTS_LENGTH = 500
+MAX_SEARCH_AREAS = 8
+MAX_SEARCH_AREA_LENGTH = 160
+MAX_RESULTS = 30
+
+COUNTRY_CODE_PATTERN = re.compile(r"^[a-zA-Z]{2}$")
+
+
+def _invalid(message: str) -> dict:
+    return {
+        "status": "invalid_input",
+        "message": message,
+    }
 
 
 def search_places(
@@ -15,33 +33,107 @@ def search_places(
     country_code: Optional[str] = None,
     max_results: int = 12,
 ) -> dict:
-    """Find real named places for the user's interests near specific towns.
+    """Find real named places for the user's interests.
 
     Args:
-        destination: Overall destination, e.g. "Kerala, India".
-        interests: Comma-separated interests in English, e.g.
-            "beaches, mountains, heritage, food".
-        search_areas: Specific towns/localities, each as "Town, District/State,
-            Country". Needed when destination is a state, region or country.
-        country_code: ISO 3166-1 alpha-2 code ("in", "jp") when the user stated
-            or clearly implied the country. Leave empty otherwise.
-        max_results: How many places to return (1-30). Fewer, diverse places
-            are better than long lists.
+        destination: Destination name, for example "Kerala, India".
+        interests: Comma-separated travel interests.
+        search_areas: Optional list of specific towns/localities.
+        country_code: Optional two-letter country code.
+        max_results: Number of places requested, from 1 to 30.
 
-    Returns a dict. Check `status` first: "needs_clarification" means ask the
-    user (see `message`/`alternatives`); "partial" means some areas failed
-    (see `areas` and `warnings`) and you must say so.
+    Returns:
+        A structured result with status, places, warnings, and diagnostics.
     """
+
+    # Validate before reading credentials or making external requests.
+    if not isinstance(destination, str) or not destination.strip():
+        return _invalid("Please provide a destination.")
+
+    destination = destination.strip()
+
+    if len(destination) > MAX_DESTINATION_LENGTH:
+        return _invalid(
+            f"Destination must be at most {MAX_DESTINATION_LENGTH} characters."
+        )
+
+    if not isinstance(interests, str) or not interests.strip():
+        return _invalid("Please provide travel interests.")
+
+    interests = interests.strip()
+
+    if len(interests) > MAX_INTERESTS_LENGTH:
+        return _invalid(
+            f"Interests must be at most {MAX_INTERESTS_LENGTH} characters."
+        )
+
+    if (
+        isinstance(max_results, bool)
+        or not isinstance(max_results, int)
+        or not 1 <= max_results <= MAX_RESULTS
+    ):
+        return _invalid(
+            f"max_results must be an integer from 1 to {MAX_RESULTS}."
+        )
+
+    if search_areas is not None:
+        if not isinstance(search_areas, list):
+            return _invalid("search_areas must be a list of town names.")
+
+        if len(search_areas) > MAX_SEARCH_AREAS:
+            return _invalid(
+                f"Provide no more than {MAX_SEARCH_AREAS} search areas per request."
+            )
+
+        cleaned_areas = []
+
+        for area in search_areas:
+            if not isinstance(area, str) or not area.strip():
+                return _invalid(
+                    "Every search area must be a non-empty string."
+                )
+
+            area = area.strip()
+
+            if len(area) > MAX_SEARCH_AREA_LENGTH:
+                return _invalid(
+                    "Each search area must be at most "
+                    f"{MAX_SEARCH_AREA_LENGTH} characters."
+                )
+
+            cleaned_areas.append(area)
+
+        search_areas = list(dict.fromkeys(cleaned_areas))
+
+    if country_code is not None:
+        if not isinstance(country_code, str):
+            return _invalid("country_code must be a two-letter country code.")
+
+        country_code = country_code.strip().lower()
+
+        if not COUNTRY_CODE_PATTERN.fullmatch(country_code):
+            return _invalid(
+                "country_code must contain exactly two letters, "
+                "for example 'in' or 'jp'."
+            )
+
     api_key = os.getenv("GEOAPIFY_API_KEY")
+
     if not api_key:
         return {
             "status": "error",
             "message": "Place search unavailable: GEOAPIFY_API_KEY is not set.",
         }
+
     client = GeoapifyClient(api_key)
+
     return run_place_search(
-        client, destination, interests, search_areas,
-        country_code=country_code, max_results=max_results,
+        client,
+        destination,
+        interests,
+        search_areas,
+        country_code=country_code,
+        max_results=max_results,
         radius_m=DEFAULT_RADIUS_M,
     )
 
@@ -58,15 +150,18 @@ def estimate_budget(
     contingency_pct: float = 10.0,
     nights: Optional[int] = None,
 ) -> dict:
-    """Add up trip costs from figures the user supplied (never invented).
+    """Calculate a budget using supplied figures, never invented prices."""
 
-    All amounts are for the whole group in one currency (ISO code, e.g. INR).
-    `nights` defaults to days - 1. Returns a dict with line items, each tagged
-    with its source (user_provided / derived_from_user_input / assumption).
-    Ask the user for any cost you do not have rather than guessing.
-    """
+    # budget.py performs numeric, range, duration, and currency-format checks.
     return _estimate_budget(
-        total_budget, days, currency, travel_cost, stay_per_night,
-        food_per_day, activities_cost, local_transport_per_day,
-        contingency_pct, nights,
+        total_budget,
+        days,
+        currency,
+        travel_cost,
+        stay_per_night,
+        food_per_day,
+        activities_cost,
+        local_transport_per_day,
+        contingency_pct,
+        nights,
     )

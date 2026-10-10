@@ -317,6 +317,38 @@ class SearchEndToEnd(unittest.TestCase):
             self.assertEqual(run_place_search(c, **kwargs)["status"], "invalid_input", kwargs)
         self.assertEqual(c.calls, [])
 
+    def test_wrapper_rejects_oversized_inputs(self):
+        cases = (
+            ("A" * 201, "nature"),
+            ("Jaipur", "A" * 501),
+        )
+        for destination, interests in cases:
+            with self.subTest(
+                destination_length=len(destination),
+                interests_length=len(interests),
+            ):
+                out = tools.search_places(destination, interests)
+                self.assertEqual(out["status"], "invalid_input")
+
+    def test_wrapper_rejects_excessive_search_areas(self):
+        out = tools.search_places(
+            "Jaipur",
+            "nature",
+            search_areas=["Area"] * 9,
+        )
+        self.assertEqual(out["status"], "invalid_input")
+        self.assertIn("8", out["message"])
+
+    def test_wrapper_rejects_invalid_limits_and_country_codes(self):
+        cases = (
+            {"max_results": 31},
+            {"country_code": "IND"},
+        )
+        for extra in cases:
+            with self.subTest(extra=extra):
+                out = tools.search_places("Jaipur", "nature", **extra)
+                self.assertEqual(out["status"], "invalid_input")
+
     def test_missing_api_key(self):
         with mock.patch.dict(os.environ, {}, clear=True):
             out = tools.search_places("Kerala, India", "beaches")
