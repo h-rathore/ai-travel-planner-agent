@@ -448,6 +448,18 @@ def base(**over):
 
 
 class Budget(unittest.TestCase):
+
+    def test_rejects_extreme_trip_duration(self):
+        result = base(days=100000)
+
+        self.assertEqual(result["status"], "invalid_input")
+        self.assertTrue(
+            any(
+                "days" in error.lower()
+                for error in result["errors"]
+            )
+        )
+
     def test_within_budget_math(self):
         r = base(activities_cost=2000, local_transport_per_day=500, contingency_pct=10)
         # 10000 + 3000*3 + 1000*4 + 500*4 + 2000 = 27000; +10% = 29700
